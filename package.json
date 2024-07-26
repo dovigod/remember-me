@@ -9,10 +9,15 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@types/three": "^0.167.0",
     "typescript": "^5.2.2",
     "vite": "^5.3.4"
   },
   "dependencies": {
-    "es-toolkit": "^1.13.1"
+    "@dimforge/rapier3d-compat": "^0.14.0",
+    "es-toolkit": "^1.13.1",
+    "lil-gui": "^0.19.2",
+    "meshline": "^3.3.1",
+    "three": "^0.167.0"
   }
 }
