@@ -1,7 +1,9 @@
 import RAPIER from '@dimforge/rapier3d-compat'
 
 
-
+/**
+ * initialize rapier world context and initalize its basic settings
+ */
 export async function createPhysicsContext({
   gravity = [0, -40, 0]
 }: {
@@ -9,6 +11,9 @@ export async function createPhysicsContext({
 } = {}) {
   await RAPIER.init()
 
-  return new RAPIER.World(new RAPIER.Vector3(...gravity))
-}
+  const world = new RAPIER.World(new RAPIER.Vector3(...gravity));
 
+  return {
+    world
+  }
+}

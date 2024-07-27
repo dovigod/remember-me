@@ -7,6 +7,7 @@ import { cameraSetting } from './constants'
 import type { StageConstructor } from "./types/Stage"
 import { createPhysicsContext } from './context/physicsContext';
 import RAPIER from '@dimforge/rapier3d-compat';
+import { OrbitControls } from 'three/examples/jsm/Addons.js';
 class Stage {
   canvas!: HTMLCanvasElement;
   container!: HTMLElement;
@@ -21,6 +22,7 @@ class Stage {
   composed: any[] = [];
   private ready: boolean = false;
 
+  controls: any;
 
   constructor({
     container,
@@ -38,11 +40,7 @@ class Stage {
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(cameraSetting.fov, this.container.offsetWidth / this.container.offsetHeight, cameraSetting.near, cameraSetting.far);
     this.camera.position.set(...cameraSetting.pos);
-
-    this.addObjects();
-    this._resize();
-    this.attachListeners()
-
+    this.controls = new OrbitControls(this.camera, this.canvas);
   }
 
 
@@ -50,8 +48,9 @@ class Stage {
     if (this.ready) {
       return;
     }
-    this.world = await createPhysicsContext();
 
+    const { world } = await createPhysicsContext();
+    this.world = world;
     this.addObjects();
     this._resize();
     this.attachListeners()
@@ -82,26 +81,48 @@ class Stage {
 
   get physicsContext() {
     return {
-      world: this.world
+      world: this.world,
     }
   }
 
 
   addObjects() {
     const band = new Band(this.context);
+    band.create();
     this.composed.push(band);
 
-    band.create();
+
+    const m = new THREE.Mesh(
+      new THREE.BoxGeometry(1, 1, 1),
+      new THREE.MeshBasicMaterial({ color: 'red', transparent: true, opacity: 0.1 })
+
+    )
+
+    this.scene.add(m)
   }
+
+
   render() {
     if (!this.ready) {
       return;
     }
     const self = this;
     const animate = () => {
+
+      // update world context
+      this.world.debugRender()
+      this.world.step()
+
+      // update composer components
+      for (const composer of this.composed) {
+        composer.update()
+      }
+
       this.renderer.render(this.scene, this.camera);
       this.frame = requestAnimationFrame(animate.bind(self));
     }
+
+    this.controls.update()
 
     animate()
   }
@@ -158,10 +179,11 @@ class Stage {
     this.height = this.container.offsetHeight;
     this.renderer.setSize(this.width, this.height);
     this.camera.aspect = this.width / this.height
+    this.camera.updateProjectionMatrix();
   }
 
 }
 
 const stage = new Stage()
-
+await stage.setup()
 stage.render()
